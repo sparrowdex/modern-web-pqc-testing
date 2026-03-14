@@ -29,21 +29,29 @@ export async function POST(request) {
     // Helper to calculate average
     const avg = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
 
-    return NextResponse.json({
+    const responseData = {
       iterations,
       averages: {
         rsa: {
           keyGen: avg(results.rsa.keyGen).toFixed(4),
           encrypt: avg(results.rsa.enc).toFixed(4),
-          decrypt: avg(results.rsa.dec).toFixed(4)
+          decrypt: avg(results.rsa.dec).toFixed(4),
+          // Note: rsa.ciphertextSizeBytes is constant, can grab last one
+          size: 256
         },
         pqc: {
           keyGen: avg(results.pqc.keyGen).toFixed(4),
           encrypt: avg(results.pqc.enc).toFixed(4),
-          decrypt: avg(results.pqc.dec).toFixed(4)
+          decrypt: avg(results.pqc.dec).toFixed(4),
+          // Note: mlkem-768 ciphertext is constant 1088 bytes
+          size: 1088
         }
       }
-    });
+    };
+
+    console.log("Benchmark Complete:", JSON.stringify(responseData, null, 2));
+
+    return NextResponse.json(responseData);
 
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
