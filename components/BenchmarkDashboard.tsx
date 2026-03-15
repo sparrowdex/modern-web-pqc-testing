@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { runBenchmark } from '@/lib/benchmarkService';
 import PerformanceChart from './PerformanceChart';
 
@@ -40,10 +40,6 @@ export default function BenchmarkDashboard() {
     }
   };
 
-  useEffect(() => {
-    runDefaultBenchmark();
-  }, []);
-
   const formatTime = (timeStr: string) => {
     return parseFloat(timeStr).toFixed(2) + ' ms';
   };
@@ -66,7 +62,7 @@ export default function BenchmarkDashboard() {
             disabled={loading}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300 transition-colors"
           >
-            {loading ? 'Running...' : 'Refresh Benchmark'}
+            {loading ? 'Running...' : results ? 'Refresh Benchmark' : 'Run Benchmark'}
           </button>
         </div>
 
@@ -80,6 +76,12 @@ export default function BenchmarkDashboard() {
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             <p className="mt-2 text-slate-600 dark:text-slate-400">Running benchmark...</p>
+          </div>
+        )}
+
+        {!results && !loading && !error && (
+          <div className="text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-700">
+            <p className="text-slate-500 dark:text-slate-400">No data available. Click "Run Benchmark" to start.</p>
           </div>
         )}
 

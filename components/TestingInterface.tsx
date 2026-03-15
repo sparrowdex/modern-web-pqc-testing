@@ -67,21 +67,21 @@ export default function TestingInterface() {
               Payload Selection
             </label>
             <div className="flex items-center space-x-4 mb-4">
-              <label className="flex items-center">
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="radio"
                   checked={!useCustom}
                   onChange={() => setUseCustom(false)}
-                  className="mr-2"
+                  className="mr-2 cursor-pointer"
                 />
                 <span className="text-sm text-slate-600 dark:text-slate-400">Presets</span>
               </label>
-              <label className="flex items-center">
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="radio"
                   checked={useCustom}
                   onChange={() => setUseCustom(true)}
-                  className="mr-2"
+                  className="mr-2 cursor-pointer"
                 />
                 <span className="text-sm text-slate-600 dark:text-slate-400">Custom</span>
               </label>
@@ -144,19 +144,37 @@ export default function TestingInterface() {
             </div>
           )}
 
+          {/* UPDATED LOADING STATE WITH 3D LATTICE PLACEHOLDER */}
           {loading && (
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              <p className="mt-2 text-slate-600 dark:text-slate-400">
-                Running 50 iterations for accurate results...
-              </p>
+            <div className="mt-8 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700">
+              <div className="flex flex-col items-center">
+                {/* Future 3D Canvas Container */}
+                <div className="w-full max-w-md aspect-video bg-slate-200 dark:bg-slate-800 rounded-lg mb-6 overflow-hidden relative flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent animate-pulse"></div>
+                  
+                  {/* Temporary placeholder text/icon until 3D is added */}
+                  <div className="text-center z-10">
+                    <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mb-3"></div>
+                    <div className="text-sm font-mono text-slate-500 dark:text-slate-400">
+                      [ 3D LWE Lattice Visualization Pending ]
+                    </div>
+                  </div>
+                </div>
+
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  Processing Cryptographic Operations
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 text-center max-w-md">
+                  Running 50 iterations of Key Generation, Encapsulation, and Decapsulation for RSA-2048 and ML-KEM-768...
+                </p>
+              </div>
             </div>
           )}
         </div>
       </div>
 
       {results && !loading && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6">
             <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">
               Benchmark Results
@@ -174,7 +192,7 @@ export default function TestingInterface() {
                     <span>ML-KEM:</span>
                     <span className="font-mono">{formatTime(results.averages.pqc.keyGen)}</span>
                   </div>
-                  <div className="flex justify-between font-bold text-green-600 dark:text-green-400">
+                  <div className="flex justify-between font-bold text-green-600 dark:text-green-400 mt-2 pt-2 border-t border-blue-200 dark:border-blue-800">
                     <span>Speedup:</span>
                     <span>{calculateSpeedup(results.averages.pqc.keyGen, results.averages.rsa.keyGen)}</span>
                   </div>
@@ -192,7 +210,7 @@ export default function TestingInterface() {
                     <span>ML-KEM:</span>
                     <span className="font-mono">{formatTime(results.averages.pqc.encrypt)}</span>
                   </div>
-                  <div className="flex justify-between font-bold text-blue-600 dark:text-blue-400">
+                  <div className="flex justify-between font-bold text-blue-600 dark:text-blue-400 mt-2 pt-2 border-t border-green-200 dark:border-green-800">
                     <span>RSA Faster:</span>
                     <span>{calculateSpeedup(results.averages.rsa.encrypt, results.averages.pqc.encrypt)}</span>
                   </div>
@@ -210,7 +228,7 @@ export default function TestingInterface() {
                     <span>ML-KEM:</span>
                     <span className="font-mono">{formatTime(results.averages.pqc.decrypt)}</span>
                   </div>
-                  <div className="flex justify-between font-bold text-green-600 dark:text-green-400">
+                  <div className="flex justify-between font-bold text-green-600 dark:text-green-400 mt-2 pt-2 border-t border-purple-200 dark:border-purple-800">
                     <span>Speedup:</span>
                     <span>{calculateSpeedup(results.averages.pqc.decrypt, results.averages.rsa.decrypt)}</span>
                   </div>
