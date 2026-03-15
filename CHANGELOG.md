@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-03-15
+### Added
+- **Animated Background**: Created `components/AnimatedLatticeBackground.tsx` to display an interactive 2D canvas particle lattice visualization, giving the landing page a quantum-themed aesthetic.
+- **Legacy Backup**: Moved the original simple landing page layout to `app/backup/page.tsx` for safekeeping.
+
+### Changed
+- **Landing Page UI (`app/page.tsx`)**: Completely redesigned with a modern glassmorphism style. Added an "Overview" default tab that summarizes the `RESEARCH_PAPER.md` metrics and uses clear calls to action.
+- **Dashboard Behavior (`components/BenchmarkDashboard.tsx`)**: Removed the `useEffect` hook that automatically ran the heavy cryptographic benchmark on page load. Implemented a clear empty state prompting the user to manually execute the test.
+- **Testing Interface (`components/TestingInterface.tsx`)**: Upgraded to allow toggling between preset and custom text payloads. Added a robust loading state with a placeholder for a future 3D LWE lattice visualization.
+
+
 ## [0.2.0] - 2026-03-13
 ### Added
 - **Benchmarking API**: Created `app/api/benchmark/route.js` to orchestrate side-by-side performance tests of RSA vs. ML-KEM.
