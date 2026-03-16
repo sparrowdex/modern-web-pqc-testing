@@ -2,11 +2,11 @@
 
 ## Abstract
 
-As quantum computing technology matures, classical public-key cryptosystems such as RSA (Rivest–Shamir–Adleman) face existential threats from Shor's algorithm. To mitigate this, the National Institute of Standards and Technology (NIST) has standardized Module-Lattice-based Key Encapsulation Mechanism (ML-KEM), formerly known as Kyber. This paper presents a comparative analysis of RSA-2048 and ML-KEM-768 within a modern Next.js web application architecture. Benchmarks conducted across three distinct payload scenarios demonstrate that ML-KEM-768 offers orders-of-magnitude faster key generation and decapsulation speeds compared to RSA-2048, establishing it as a highly scalable alternative for future-proof web security, despite a marked increase in ciphertext size.
+As quantum computing technology matures, classical public-key cryptosystems such as RSA (Rivest–Shamir–Adleman) face existential threats from Shor's algorithm. To mitigate this, the National Institute of Standards and Technology (NIST) has standardized Module-Lattice-based Key Encapsulation Mechanism (ML-KEM), formerly known as Kyber, under the official **FIPS 203** publication. This paper presents a comparative analysis of RSA-2048 and ML-KEM-768 within a modern Next.js web application architecture. Benchmarks conducted across three distinct payload scenarios demonstrate that ML-KEM-768 offers orders-of-magnitude faster key generation and decapsulation speeds compared to RSA-2048, establishing it as a highly scalable alternative for future-proof web security, despite a marked increase in ciphertext size.
 
 ## 1. Introduction
 
-The security of the modern internet relies on the difficulty of factoring large integers (RSA) or computing discrete logarithms (ECC). However, a Cryptographically Relevant Quantum Computer (CRQC) would be able to solve these problems efficiently. In response, the industry is migrating to Post-Quantum Cryptography (PQC).
+The security of the modern internet relies on the difficulty of factoring large integers (RSA) or computing discrete logarithms (ECC). However, a Cryptographically Relevant Quantum Computer (CRQC) would be able to solve these problems efficiently. This threat is compounded by the **"Store Now, Decrypt Later" (SNDL)** attack model, where adversaries currently harvest encrypted traffic to decrypt once a CRQC is built. The reality of SNDL makes the migration to Post-Quantum Cryptography (PQC) an immediate necessity rather than a future hypothetical.
 
 This study focuses on the practical implementation and performance implications of this migration. We integrate ML-KEM-768 (NIST Security Level 3) into a Node.js/Next.js environment to measure the real-world impact on latency and bandwidth when replacing the industry-standard RSA-2048.
 
@@ -16,6 +16,7 @@ This study focuses on the practical implementation and performance implications 
 The benchmarking framework was built using **Next.js 16.1.6** running in a Node.js runtime.
 *   **Classical Algorithm**: RSA-2048 with OAEP padding, utilizing the native Node.js `crypto` module (OpenSSL bindings).
 *   **Quantum-Safe Algorithm**: ML-KEM-768, utilizing the `@noble/post-quantum` pure JavaScript implementation.
+*   **Real-Time Visualization**: A WebGL-based 3D visualization tool using React Three Fiber was developed to monitor the real-time execution of the iterations, providing visual proof of the mathematical operations without introducing blocking overhead to the backend benchmarking API.
 
 ### 2.2 Test Scenarios
 Tests were executed with **50 iterations** per request to smooth out variance.
@@ -54,7 +55,7 @@ The following metrics were collected. Time is measured in milliseconds (ms) and 
 ## 4. Analysis
 
 ### 4.1 Computational Efficiency (CPU)
-The most significant finding is the discrepancy in **Key Generation**. RSA key generation requires finding two large prime numbers, a probabilistic and computationally expensive process. In contrast, ML-KEM relies on lattice-based matrix operations (Learning With Errors), which is deterministic and efficient.
+The most significant finding is the discrepancy in **Key Generation**. RSA key generation requires finding two large prime numbers, a probabilistic and computationally expensive process. In contrast, ML-KEM relies on lattice-based matrix operations (Learning With Errors), which is deterministic and highly efficient. The underlying LWE formula, $\mathbf{b} = \mathbf{A}\mathbf{s} + \mathbf{e}$, involves generating a noise polynomial vector ($\mathbf{e}$) and performing matrix multiplication against a public matrix ($\mathbf{A}$), which executes exponentially faster than a probabilistic prime search.
 
 In all scenarios, ML-KEM-768 key generation (e.g., **1.26 ms**) was over **150x faster** than RSA-2048 (**199.77 ms**). For server environments that handle high session churn and require ephemeral key exchanges (common in modern TLS and API authentication), ML-KEM offers a substantial performance advantage.
 
@@ -81,7 +82,7 @@ For developers implementing secure communication layers in Next.js:
 The future of web security is quantum-resistant, and tools like ML-KEM provide a clear path forward without sacrificing performance.
 
 ## References
-1.  NIST Post-Quantum Cryptography Standardization Process.
+1.  NIST FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard.
 2.  The `@noble/post-quantum` JavaScript Library.
 3.  Rivest, Shamir, Adleman. "A Method for Obtaining Digital Signatures and Public-Key Cryptosystems."
 4.  Bos, J., et al. "CRYSTALS-Kyber: A CCA-Secure Module-Lattice-Based KEM."

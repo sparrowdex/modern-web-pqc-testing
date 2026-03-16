@@ -14,12 +14,24 @@ export default function AnimatedLatticeBackground() {
     let animationFrameId: number;
     let particles: Particle[] = [];
 
-    // Setup canvas size
+    // FIXED: Bulletproof DPR and resizing logic
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
-      canvas!.width = window.innerWidth * dpr;
-      canvas!.height = window.innerHeight * dpr;
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      // 1. Set internal drawing resolution
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      
+      // 2. Force strict CSS display dimensions to prevent percentage-based stretching
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+
+      // 3. Reset any prior scaling before applying the new DPR scale
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
+      
       initParticles();
     };
 
@@ -33,7 +45,6 @@ export default function AnimatedLatticeBackground() {
       constructor() {
         this.x = Math.random() * window.innerWidth;
         this.y = Math.random() * window.innerHeight;
-        // Slow, floating movement
         this.vx = (Math.random() - 0.5) * 0.5;
         this.vy = (Math.random() - 0.5) * 0.5;
         this.radius = Math.random() * 2 + 1;
@@ -43,7 +54,6 @@ export default function AnimatedLatticeBackground() {
         this.x += this.vx;
         this.y += this.vy;
 
-        // Gently bounce off the edges
         if (this.x < 0 || this.x > window.innerWidth) this.vx *= -1;
         if (this.y < 0 || this.y > window.innerHeight) this.vy *= -1;
       }
@@ -52,14 +62,13 @@ export default function AnimatedLatticeBackground() {
         if (!ctx) return;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(96, 165, 250, 0.5)'; // Tailwind blue-400
+        ctx.fillStyle = 'rgba(96, 165, 250, 0.5)'; 
         ctx.fill();
       }
     }
 
     const initParticles = () => {
       particles = [];
-      // Calculate particle density based on screen area to avoid looking empty on tall screens
       const numParticles = Math.floor((window.innerWidth * window.innerHeight) / 10000);
       for (let i = 0; i < numParticles; i++) {
         particles.push(new Particle());
@@ -69,28 +78,24 @@ export default function AnimatedLatticeBackground() {
     const animate = () => {
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
-      // Update and draw nodes
       particles.forEach((particle) => {
         particle.update();
         particle.draw();
       });
 
-      // Draw connecting lattice lines
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
-          // Connect nodes if they are within 150px
           if (distance < 150) {
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
             
-            // Opacity fades out as they get further apart
             const opacity = 1 - distance / 150;
-            ctx.strokeStyle = `rgba(59, 130, 246, ${opacity * 0.3})`; // Tailwind blue-500
+            ctx.strokeStyle = `rgba(59, 130, 246, ${opacity * 0.3})`; 
             ctx.lineWidth = 1;
             ctx.stroke();
           }
@@ -112,13 +117,13 @@ export default function AnimatedLatticeBackground() {
 
   return (
     <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden bg-slate-950">
-      {/* Subtle deep blue ambient glows behind the canvas */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/20 blur-[120px]"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/20 blur-[120px]"></div>
       
       <canvas
         ref={canvasRef}
-        className="block w-full h-full opacity-60"
+        // Removed w-full h-full since we are handling exact sizing in JS now
+        className="block opacity-60"
       />
     </div>
   );

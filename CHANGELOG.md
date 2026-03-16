@@ -5,9 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [0.4.0] - 2026-03-16
 ### Added
 - **3D Visualization Preparation**: Installed `three`, `@react-three/fiber`, `@react-three/drei`, and `@types/three` dependencies to prepare for a future 3D LWE lattice visualization component (independent of the global 2D animated lattice background).
+- **Backend Streaming API**: Transformed the Next.js benchmarking route from a static, blocking function into a live NDJSON (Newline-Delimited JSON) stream to broadcast the exact millisecond of iteration completions in real-time.
+- **Data-Driven LWE Particles**: Created a live particle stream (rendered as smooth, circular textures) to visually represent error polynomials ($\mathbf{e}$). Mapped particle density directly to `payloadSize` (ranging from a focused stream for 32-byte payloads to a dense 2,000-particle cloud for 190-byte max payloads).
+- **Dynamic Visual Feedback**: Programmed the ML-KEM purple grid to scale up by 30% and the noise stream to flash brightly in sync with the streaming API, providing an authentic "heartbeat" to the cryptography simulation.
 
 ### Fixed
 - **PerformanceChart UI**: Fixed the Recharts tooltip overlay to use a custom dark theme matching the site design, resolving the issue where the default white background obscured readability.
+- **WebGL Canvas Portal**: Implemented React Portals (`createPortal`) to detach the WebGL `<Canvas>` from nested HTML `<div>` constraints, allowing the 3D environment to render as a flawless edge-to-edge full-screen overlay.
 
 ## [0.3.0] - 2026-03-15
 ### Added

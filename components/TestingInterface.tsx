@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { runBenchmark, BenchmarkResults } from '@/lib/benchmarkService';
 import PerformanceChart from './PerformanceChart';
 import LatticeVisualization from './LatticeVisualization'; 
@@ -12,12 +13,19 @@ const PRESET_PAYLOADS = [
 ];
 
 export default function TestingInterface() {
+  // Required to safely use Portals in Next.js without SSR hydration errors
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const [customPayload, setCustomPayload] = useState('');
   const [selectedPreset, setSelectedPreset] = useState(PRESET_PAYLOADS[0].value);
   const [results, setResults] = useState<BenchmarkResults | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useCustom, setUseCustom] = useState(false);
+  
+  // NEW: State to track live progress from the benchmark stream
+  const [progress, setProgress] = useState(0);
 
   const runTest = async () => {
     const payload = useCustom ? customPayload : selectedPreset;
@@ -28,10 +36,14 @@ export default function TestingInterface() {
     }
 
     setLoading(true);
+    setProgress(0); // Reset progress at start
     setError(null);
     
     try {
-      const benchmarkResults = await runBenchmark(payload);
+      // Pass a callback to runBenchmark to receive live updates
+      const benchmarkResults = await runBenchmark(payload, (current, total) => {
+        setProgress(current / total); // Math yields a float between 0.0 and 1.0
+      });
       setResults(benchmarkResults);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Benchmark failed');
@@ -222,26 +234,39 @@ export default function TestingInterface() {
         )}
       </div>
 
-      {/* FULL SCREEN ETHEREAL OVERLAY - Moved completely out of the card */}
-      {loading && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
+      {/* FULL SCREEN ETHEREAL OVERLAY with PORTAL */}
+      {loading && mounted && createPortal(
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
           
-          {/* Full Screen 3D Canvas */}
+          {/* Full Screen 3D Canvas with Live Progress Data */}
           <div className="absolute inset-0 z-0 pointer-events-none">
-            <LatticeVisualization />
+            <LatticeVisualization progress={progress} />
           </div>
 
-          {/* Floating Loading Text Panel */}
-          <div className="relative z-10 text-center bg-slate-900/60 p-6 rounded-2xl border border-slate-700/50 shadow-2xl backdrop-blur-xl max-w-lg mt-48">
+          {/* Floating Loading Text Panel with Live Progress Bar */}
+          <div className="relative z-10 text-center bg-slate-900/70 p-8 rounded-2xl border border-slate-700/50 shadow-2xl backdrop-blur-xl max-w-lg mt-48 w-full mx-4">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mb-4"></div>
-            <h3 className="text-xl font-bold text-slate-50 mb-2">
+            <h3 className="text-xl font-bold text-slate-50 mb-3">
               Processing Cryptographic Operations
             </h3>
-            <p className="text-slate-300 text-sm">
-              Simulating 50 iterations... Generating RSA keys and encapsulating Learning With Errors (LWE) matrices...
+            <p className="text-slate-300 text-sm mb-6">
+              Calculating noise polynomials and decapsulating LWE matrices...
             </p>
+            
+            {/* Live Progress UI */}
+            <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+              <div 
+                className="bg-purple-500 h-2 transition-all duration-75 ease-linear" 
+                style={{ width: `${progress * 100}%` }}
+              ></div>
+            </div>
+            <div className="flex justify-between mt-2 text-slate-400 text-xs font-mono">
+              <span>{Math.round(progress * 100)}%</span>
+              <span>Iteration {Math.round(progress * 50)} / 50</span>
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
