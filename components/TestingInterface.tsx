@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { runBenchmark, BenchmarkResults } from '@/lib/benchmarkService';
 import PerformanceChart from './PerformanceChart';
+import LatticeVisualization from './LatticeVisualization'; 
 
 const PRESET_PAYLOADS = [
   { name: 'AES-256 Key Exchange', value: 'a'.repeat(32), description: '32-byte symmetric key' },
@@ -55,195 +56,193 @@ export default function TestingInterface() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-6">
-          Interactive Testing Interface
-        </h2>
+    <>
+      {/* MAIN UI - Wrapped in relative positioning so it sits behind the overlay */}
+      <div className="space-y-6 relative z-10">
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-6">
+            Interactive Testing Interface
+          </h2>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Payload Selection
-            </label>
-            <div className="flex items-center space-x-4 mb-4">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  checked={!useCustom}
-                  onChange={() => setUseCustom(false)}
-                  className="mr-2 cursor-pointer"
-                />
-                <span className="text-sm text-slate-600 dark:text-slate-400">Presets</span>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Payload Selection
               </label>
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  checked={useCustom}
-                  onChange={() => setUseCustom(true)}
-                  className="mr-2 cursor-pointer"
-                />
-                <span className="text-sm text-slate-600 dark:text-slate-400">Custom</span>
-              </label>
+              <div className="flex items-center space-x-4 mb-4">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={!useCustom}
+                    onChange={() => setUseCustom(false)}
+                    className="mr-2 cursor-pointer"
+                  />
+                  <span className="text-sm text-slate-600 dark:text-slate-400">Presets</span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={useCustom}
+                    onChange={() => setUseCustom(true)}
+                    className="mr-2 cursor-pointer"
+                  />
+                  <span className="text-sm text-slate-600 dark:text-slate-400">Custom</span>
+                </label>
+              </div>
+
+              {!useCustom ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {PRESET_PAYLOADS.map((preset) => (
+                    <button
+                      key={preset.name}
+                      onClick={() => setSelectedPreset(preset.value)}
+                      className={`p-3 text-left rounded-lg border-2 transition-colors ${
+                        selectedPreset === preset.value
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                          : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                      }`}
+                    >
+                      <div className="font-medium text-slate-900 dark:text-slate-100">
+                        {preset.name}
+                      </div>
+                      <div className="text-sm text-slate-500 dark:text-slate-400">
+                        {preset.description}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div>
+                  <textarea
+                    value={customPayload}
+                    onChange={(e) => setCustomPayload(e.target.value)}
+                    placeholder="Enter custom payload text..."
+                    className="w-full p-3 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:text-slate-100"
+                    rows={4}
+                  />
+                  <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                    Size: {getPayloadSize()} bytes
+                  </div>
+                </div>
+              )}
             </div>
 
-            {!useCustom ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {PRESET_PAYLOADS.map((preset) => (
-                  <button
-                    key={preset.name}
-                    onClick={() => setSelectedPreset(preset.value)}
-                    className={`p-3 text-left rounded-lg border-2 transition-colors ${
-                      selectedPreset === preset.value
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                    }`}
-                  >
-                    <div className="font-medium text-slate-900 dark:text-slate-100">
-                      {preset.name}
-                    </div>
-                    <div className="text-sm text-slate-500 dark:text-slate-400">
-                      {preset.description}
-                    </div>
-                  </button>
-                ))}
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={runTest}
+                disabled={loading}
+                className="px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300 transition-colors font-medium relative z-20"
+              >
+                {loading ? 'Running Benchmark...' : 'Run Benchmark'}
+              </button>
+              
+              <div className="text-sm text-slate-500 dark:text-slate-400">
+                Payload size: {getPayloadSize()} bytes
               </div>
-            ) : (
-              <div>
-                <textarea
-                  value={customPayload}
-                  onChange={(e) => setCustomPayload(e.target.value)}
-                  placeholder="Enter custom payload text..."
-                  className="w-full p-3 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:text-slate-100"
-                  rows={4}
-                />
-                <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Size: {getPayloadSize()} bytes
-                </div>
+            </div>
+
+            {error && (
+              <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-md">
+                Error: {error}
               </div>
             )}
           </div>
+        </div>
 
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={runTest}
-              disabled={loading}
-              className="px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300 transition-colors font-medium"
-            >
-              {loading ? 'Running Benchmark...' : 'Run Benchmark'}
-            </button>
-            
-            <div className="text-sm text-slate-500 dark:text-slate-400">
-              Payload size: {getPayloadSize()} bytes
-            </div>
-          </div>
-
-          {error && (
-            <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-md">
-              Error: {error}
-            </div>
-          )}
-
-          {/* UPDATED LOADING STATE WITH 3D LATTICE PLACEHOLDER */}
-          {loading && (
-            <div className="mt-8 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700">
-              <div className="flex flex-col items-center">
-                {/* Future 3D Canvas Container */}
-                <div className="w-full max-w-md aspect-video bg-slate-200 dark:bg-slate-800 rounded-lg mb-6 overflow-hidden relative flex items-center justify-center border border-slate-300 dark:border-slate-600 shadow-inner">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent animate-pulse"></div>
-                  
-                  {/* Temporary placeholder text/icon until 3D is added */}
-                  <div className="text-center z-10">
-                    <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mb-3"></div>
-                    <div className="text-sm font-mono text-slate-500 dark:text-slate-400">
-                      [ 3D LWE Lattice Visualization Pending ]
+        {results && !loading && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-10">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">
+                Benchmark Results
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-lg">
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Key Generation</h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>RSA:</span>
+                      <span className="font-mono">{formatTime(results.averages.rsa.keyGen)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>ML-KEM:</span>
+                      <span className="font-mono">{formatTime(results.averages.pqc.keyGen)}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-green-600 dark:text-green-400 mt-2 pt-2 border-t border-blue-200 dark:border-blue-800">
+                      <span>Speedup:</span>
+                      <span>{calculateSpeedup(results.averages.pqc.keyGen, results.averages.rsa.keyGen)}</span>
                     </div>
                   </div>
                 </div>
 
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                  Processing Cryptographic Operations
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400 text-center max-w-md">
-                  Running 50 iterations of Key Generation, Encapsulation, and Decapsulation for RSA-2048 and ML-KEM-768...
-                </p>
+                <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4 rounded-lg">
+                  <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2">Encryption</h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>RSA:</span>
+                      <span className="font-mono">{formatTime(results.averages.rsa.encrypt)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>ML-KEM:</span>
+                      <span className="font-mono">{formatTime(results.averages.pqc.encrypt)}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-blue-600 dark:text-blue-400 mt-2 pt-2 border-t border-green-200 dark:border-green-800">
+                      <span>RSA Faster:</span>
+                      <span>{calculateSpeedup(results.averages.rsa.encrypt, results.averages.pqc.encrypt)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-4 rounded-lg">
+                  <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">Decryption</h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>RSA:</span>
+                      <span className="font-mono">{formatTime(results.averages.rsa.decrypt)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>ML-KEM:</span>
+                      <span className="font-mono">{formatTime(results.averages.pqc.decrypt)}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-green-600 dark:text-green-400 mt-2 pt-2 border-t border-purple-200 dark:border-purple-800">
+                      <span>Speedup:</span>
+                      <span>{calculateSpeedup(results.averages.pqc.decrypt, results.averages.rsa.decrypt)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center text-sm text-slate-500 dark:text-slate-400">
+                Based on {results.iterations} iterations per operation
               </div>
             </div>
-          )}
-        </div>
+
+            <PerformanceChart data={results} />
+          </div>
+        )}
       </div>
 
-      {results && !loading && (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">
-              Benchmark Results
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-linear-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-lg">
-                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Key Generation</h4>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span>RSA:</span>
-                    <span className="font-mono">{formatTime(results.averages.rsa.keyGen)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>ML-KEM:</span>
-                    <span className="font-mono">{formatTime(results.averages.pqc.keyGen)}</span>
-                  </div>
-                  <div className="flex justify-between font-bold text-green-600 dark:text-green-400 mt-2 pt-2 border-t border-blue-200 dark:border-blue-800">
-                    <span>Speedup:</span>
-                    <span>{calculateSpeedup(results.averages.pqc.keyGen, results.averages.rsa.keyGen)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-linear-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4 rounded-lg">
-                <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2">Encryption</h4>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span>RSA:</span>
-                    <span className="font-mono">{formatTime(results.averages.rsa.encrypt)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>ML-KEM:</span>
-                    <span className="font-mono">{formatTime(results.averages.pqc.encrypt)}</span>
-                  </div>
-                  <div className="flex justify-between font-bold text-blue-600 dark:text-blue-400 mt-2 pt-2 border-t border-green-200 dark:border-green-800">
-                    <span>RSA Faster:</span>
-                    <span>{calculateSpeedup(results.averages.rsa.encrypt, results.averages.pqc.encrypt)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-linear-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-4 rounded-lg">
-                <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">Decryption</h4>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span>RSA:</span>
-                    <span className="font-mono">{formatTime(results.averages.rsa.decrypt)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>ML-KEM:</span>
-                    <span className="font-mono">{formatTime(results.averages.pqc.decrypt)}</span>
-                  </div>
-                  <div className="flex justify-between font-bold text-green-600 dark:text-green-400 mt-2 pt-2 border-t border-purple-200 dark:border-purple-800">
-                    <span>Speedup:</span>
-                    <span>{calculateSpeedup(results.averages.pqc.decrypt, results.averages.rsa.decrypt)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="text-center text-sm text-slate-500 dark:text-slate-400">
-              Based on {results.iterations} iterations per operation
-            </div>
+      {/* FULL SCREEN ETHEREAL OVERLAY - Moved completely out of the card */}
+      {loading && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
+          
+          {/* Full Screen 3D Canvas */}
+          <div className="absolute inset-0 z-0 pointer-events-none">
+            <LatticeVisualization />
           </div>
 
-          <PerformanceChart data={results} />
+          {/* Floating Loading Text Panel */}
+          <div className="relative z-10 text-center bg-slate-900/60 p-6 rounded-2xl border border-slate-700/50 shadow-2xl backdrop-blur-xl max-w-lg mt-48">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mb-4"></div>
+            <h3 className="text-xl font-bold text-slate-50 mb-2">
+              Processing Cryptographic Operations
+            </h3>
+            <p className="text-slate-300 text-sm">
+              Simulating 50 iterations... Generating RSA keys and encapsulating Learning With Errors (LWE) matrices...
+            </p>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

@@ -16,8 +16,10 @@ export default function AnimatedLatticeBackground() {
 
     // Setup canvas size
     const resize = () => {
-      canvas!.width = window.innerWidth;
-      canvas!.height = window.innerHeight;
+      const dpr = window.devicePixelRatio || 1;
+      canvas!.width = window.innerWidth * dpr;
+      canvas!.height = window.innerHeight * dpr;
+      ctx.scale(dpr, dpr);
       initParticles();
     };
 
@@ -29,8 +31,8 @@ export default function AnimatedLatticeBackground() {
       radius: number;
 
       constructor() {
-        this.x = Math.random() * canvas!.width;
-        this.y = Math.random() * canvas!.height;
+        this.x = Math.random() * window.innerWidth;
+        this.y = Math.random() * window.innerHeight;
         // Slow, floating movement
         this.vx = (Math.random() - 0.5) * 0.5;
         this.vy = (Math.random() - 0.5) * 0.5;
@@ -42,8 +44,8 @@ export default function AnimatedLatticeBackground() {
         this.y += this.vy;
 
         // Gently bounce off the edges
-        if (this.x < 0 || this.x > canvas!.width) this.vx *= -1;
-        if (this.y < 0 || this.y > canvas!.height) this.vy *= -1;
+        if (this.x < 0 || this.x > window.innerWidth) this.vx *= -1;
+        if (this.y < 0 || this.y > window.innerHeight) this.vy *= -1;
       }
 
       draw() {
@@ -57,15 +59,15 @@ export default function AnimatedLatticeBackground() {
 
     const initParticles = () => {
       particles = [];
-      // Adjust particle count based on screen width for performance
-      const numParticles = Math.floor(window.innerWidth / 15);
+      // Calculate particle density based on screen area to avoid looking empty on tall screens
+      const numParticles = Math.floor((window.innerWidth * window.innerHeight) / 10000);
       for (let i = 0; i < numParticles; i++) {
         particles.push(new Particle());
       }
     };
 
     const animate = () => {
-      ctx.clearRect(0, 0, canvas!.width, canvas!.height);
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
       // Update and draw nodes
       particles.forEach((particle) => {

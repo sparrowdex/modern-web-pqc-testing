@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-03-16
+### Added
+- **3D Visualization Preparation**: Installed `three`, `@react-three/fiber`, `@react-three/drei`, and `@types/three` dependencies to prepare for a future 3D LWE lattice visualization component (independent of the global 2D animated lattice background).
+
+### Fixed
+- **PerformanceChart UI**: Fixed the Recharts tooltip overlay to use a custom dark theme matching the site design, resolving the issue where the default white background obscured readability.
+
 ## [0.3.0] - 2026-03-15
 ### Added
 - **Animated Background**: Created `components/AnimatedLatticeBackground.tsx` to display an interactive 2D canvas particle lattice visualization, giving the landing page a quantum-themed aesthetic.
