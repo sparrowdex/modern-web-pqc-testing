@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-03-16
+### Added
+- **3D Visualization Preparation**: Installed `three`, `@react-three/fiber`, `@react-three/drei`, and `@types/three` dependencies to prepare for a future 3D LWE lattice visualization component (independent of the global 2D animated lattice background).
+- **Backend Streaming API**: Transformed the Next.js benchmarking route from a static, blocking function into a live NDJSON (Newline-Delimited JSON) stream to broadcast the exact millisecond of iteration completions in real-time.
+- **Data-Driven LWE Particles**: Created a live particle stream (rendered as smooth, circular textures) to visually represent error polynomials ($\mathbf{e}$). Mapped particle density directly to `payloadSize` (ranging from a focused stream for 32-byte payloads to a dense 2,000-particle cloud for 190-byte max payloads).
+- **Dynamic Visual Feedback**: Programmed the ML-KEM purple grid to scale up by 30% and the noise stream to flash brightly in sync with the streaming API, providing an authentic "heartbeat" to the cryptography simulation.
+
+### Fixed
+- **PerformanceChart UI**: Fixed the Recharts tooltip overlay to use a custom dark theme matching the site design, resolving the issue where the default white background obscured readability.
+- **WebGL Canvas Portal**: Implemented React Portals (`createPortal`) to detach the WebGL `<Canvas>` from nested HTML `<div>` constraints, allowing the 3D environment to render as a flawless edge-to-edge full-screen overlay.
+
+## [0.3.0] - 2026-03-15
+### Added
+- **Animated Background**: Created `components/AnimatedLatticeBackground.tsx` to display an interactive 2D canvas particle lattice visualization, giving the landing page a quantum-themed aesthetic.
+- **Legacy Backup**: Moved the original simple landing page layout to `app/backup/page.tsx` for safekeeping.
+
+### Changed
+- **Landing Page UI (`app/page.tsx`)**: Completely redesigned with a modern glassmorphism style. Added an "Overview" default tab that summarizes the `RESEARCH_PAPER.md` metrics and uses clear calls to action.
+- **Dashboard Behavior (`components/BenchmarkDashboard.tsx`)**: Removed the `useEffect` hook that automatically ran the heavy cryptographic benchmark on page load. Implemented a clear empty state prompting the user to manually execute the test.
+- **Testing Interface (`components/TestingInterface.tsx`)**: Upgraded to allow toggling between preset and custom text payloads. Added a robust loading state with a placeholder for a future 3D LWE lattice visualization.
+
+
 ## [0.2.0] - 2026-03-13
 ### Added
 - **Benchmarking API**: Created `app/api/benchmark/route.js` to orchestrate side-by-side performance tests of RSA vs. ML-KEM.
