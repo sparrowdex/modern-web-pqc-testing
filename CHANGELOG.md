@@ -2,44 +2,52 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.4.0] - 2026-03-16
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
 ### Added
-- **3D Visualization Preparation**: Installed `three`, `@react-three/fiber`, `@react-three/drei`, and `@types/three` dependencies to prepare for a future 3D LWE lattice visualization component (independent of the global 2D animated lattice background).
-- **Backend Streaming API**: Transformed the Next.js benchmarking route from a static, blocking function into a live NDJSON (Newline-Delimited JSON) stream to broadcast the exact millisecond of iteration completions in real-time.
-- **Data-Driven LWE Particles**: Created a live particle stream (rendered as smooth, circular textures) to visually represent error polynomials ($\mathbf{e}$). Mapped particle density directly to `payloadSize` (ranging from a focused stream for 32-byte payloads to a dense 2,000-particle cloud for 190-byte max payloads).
-- **Dynamic Visual Feedback**: Programmed the ML-KEM purple grid to scale up by 30% and the noise stream to flash brightly in sync with the streaming API, providing an authentic "heartbeat" to the cryptography simulation.
+- **Interactive Testing Interface**: A comprehensive benchmarking tool to compare classical RSA-2048 against post-quantum ML-KEM-768.
+- **Real-Time Data Streaming**: Implemented a Node.js streaming API to broadcast live progress updates and yield to the event loop.
+- **Dynamic Visualizations**: Integrated Recharts for detailed performance analytics, utilizing a logarithmic scale to accurately display ML-KEM's microscopic execution times alongside RSA.
+- **Export Capabilities**:
+  - **Save as PDF**: Utilizes CSS `@media print` rules to strip away UI elements and backgrounds, generating clean, academic-quality reports.
+  - **Export CSV**: Allows downloading of raw benchmark metric averages for external analysis.
+  - **Download as PNG**: Individual charts can be exported as high-res, transparent PNGs.
+- **Custom Branding**: Added a responsive `lattice-logo.svg` and a `MovingTitle` component for a smooth scrolling "news ticker" effect in the browser tab.
+- **JIT Warmup Phase**: Added an unrecorded 5-iteration warmup loop to the backend to ensure the V8 engine optimizes the cryptographic math before recording timings.
+
+### Changed
+- Consolidated the redundant `BenchmarkDashboard` directly into the `TestingInterface` to create a unified "Report Generator" experience.
+- Replaced `html2canvas` with `html-to-image` to support modern CSS color spaces (like `lab()` and `oklch()`) introduced in Tailwind CSS v4.
+- Disabled Recharts animations (`isAnimationActive={false}`) during print and export events to guarantee graphs are fully rendered the exact moment a snapshot is taken.
+- Set maximum iteration limit to 5000 in the API route to prevent accidental Vercel/Node server timeouts.
 
 ### Fixed
-- **PerformanceChart UI**: Fixed the Recharts tooltip overlay to use a custom dark theme matching the site design, resolving the issue where the default white background obscured readability.
-- **WebGL Canvas Portal**: Implemented React Portals (`createPortal`) to detach the WebGL `<Canvas>` from nested HTML `<div>` constraints, allowing the 3D environment to render as a flawless edge-to-edge full-screen overlay.
+- Fixed an issue where the backend was ignoring the frontend's iteration slider by properly parsing the `iterations` parameter from the request body.
+- Fixed a bug where chart PNG exports were rendering completely blank in dark mode. Solved by injecting a `.force-export-light-mode` CSS class to briefly swap SVG fill/stroke colors strictly during the capture phase.
+- Fixed severe layout shifting and page overflow during PDF generation by removing hardcoded container limits (`print:max-w-full`) to adhere to standard A4 paper dimensions.
+- Fixed a known Recharts bug where SVG graphs would stretch out of bounds during `window.print()` events by constraining `ResponsiveContainer` widths to `99%`.
 
-## [0.3.0] - 2026-03-15
+### Security
+- Upgraded `next` and `eslint-config-next` from `16.1.6` to `16.2.3` to resolve several high-severity vulnerabilities flagged by `npm audit`, including:
+  - HTTP request smuggling in rewrites (GHSA-ggv3-7p47-pfv8).
+  - Unbounded next/image disk cache growth (GHSA-3x4c-7xq6-9pq8).
+  - Denial of Service via unbounded postponed resume buffering (GHSA-h27x-g6w4-24gq).
+  - CSRF check bypass vulnerabilities.
+
+## [0.1.0] - Initial Release
+
 ### Added
-- **Animated Background**: Created `components/AnimatedLatticeBackground.tsx` to display an interactive 2D canvas particle lattice visualization, giving the landing page a quantum-themed aesthetic.
-- **Legacy Backup**: Moved the original simple landing page layout to `app/backup/page.tsx` for safekeeping.
+- **Project Foundation**: Bootstrapped Next.js 16 application with Tailwind CSS v4 and TypeScript.
+- **Cryptographic Modules**: 
+  - Integrated native Node.js `crypto` module for RSA-2048 operations.
+  - Integrated `@noble/post-quantum` library for Post-Quantum ML-KEM-768 operations.
+- **API Route**: Created `/api/benchmark` endpoint to execute comparative timing tests.
+- **3D & 2D Backgrounds**: Added a 3D `LatticeVisualization` using React Three Fiber and a 2D `AnimatedLatticeBackground` for the main UI.
+- **Benchmark Dashboard**: Built initial static dashboard (`BenchmarkDashboard.tsx`) to display basic payload sizes and CPU timing comparisons.
+- **Research Context**: Included `RESEARCH_PAPER.md` outlining the theoretical foundation and purpose of the comparative study.
 
-### Changed
-- **Landing Page UI (`app/page.tsx`)**: Completely redesigned with a modern glassmorphism style. Added an "Overview" default tab that summarizes the `RESEARCH_PAPER.md` metrics and uses clear calls to action.
-- **Dashboard Behavior (`components/BenchmarkDashboard.tsx`)**: Removed the `useEffect` hook that automatically ran the heavy cryptographic benchmark on page load. Implemented a clear empty state prompting the user to manually execute the test.
-- **Testing Interface (`components/TestingInterface.tsx`)**: Upgraded to allow toggling between preset and custom text payloads. Added a robust loading state with a placeholder for a future 3D LWE lattice visualization.
-
-
-## [0.2.0] - 2026-03-13
-### Added
-- **Benchmarking API**: Created `app/api/benchmark/route.js` to orchestrate side-by-side performance tests of RSA vs. ML-KEM.
-- **Research Paper**: Added `RESEARCH_PAPER.md` containing the abstract, methodology, and empirical results comparing computational efficiency and artifact sizes.
-- **Dependencies**: Integrated `@noble/post-quantum` package for NIST-standardized ML-KEM implementation.
-
-### Changed
-- **Benchmark Logic**: Implemented three specific test scenarios (AES-256 Key Exchange, Short Message, Max Payload) to measure Key Gen, Encapsulation, and Decapsulation times.
-- **ML-KEM Module**: Updated `lib/crypto/mlkem.js` to correctly handle imports and perform standard Key Encapsulation Mechanisms.
-
-## [0.1.0] - 2026-02-27
-### Added
-- **RSA Module (`lib/crypto/rsa.js`)**:
-  - Implemented RSA-2048 using the Node.js native `crypto` library.
-  - Added functionality for Key Pair generation, Public Key Encryption (OAEP), and Private Key Decryption.
-- **ML-KEM Module (`lib/crypto/mlkem.js`)**:
-  - Implemented ML-KEM-768 (Kyber) using the `@noble/post-quantum` library.
-  - Added functionality for Lattice-based Key Generation, Encapsulation (Shared Secret generation), and Decapsulation.
-- **Project Initialization**: Set up the Next.js framework to support the comparative study of classical vs. post-quantum cryptography.
+---
+*Document generated for RSA vs ML-KEM Research Project.*

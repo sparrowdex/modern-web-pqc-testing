@@ -8,13 +8,14 @@ export interface BenchmarkResults {
 
 export async function runBenchmark(
   payload: string, 
+  iterations: number = 50,
   onProgress?: (iteration: number, total: number) => void
 ): Promise<BenchmarkResults> {
   
   const response = await fetch('/api/benchmark', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ payload }),
+    body: JSON.stringify({ payload, iterations }),
   });
 
   if (!response.ok || !response.body) {

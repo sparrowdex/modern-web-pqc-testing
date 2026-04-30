@@ -1,12 +1,15 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { runRSABenchmark } from '@/lib/crypto/rsa';
 import { runMLKEMBenchmark } from '@/lib/crypto/mlkem';
 
-export async function POST(request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const payload = body.payload || "Standard Benchmark Payload";
-    const iterations = 50; 
+    
+    // Safely parse iterations, fallback to 50, and cap at 5000 to prevent server timeouts
+    const requestedIterations = parseInt(body.iterations, 10) || 50;
+    const iterations = Math.min(Math.max(requestedIterations, 10), 5000);
 
     const encoder = new TextEncoder();
 
@@ -14,9 +17,17 @@ export async function POST(request) {
     const stream = new ReadableStream({
       async start(controller) {
         const results = {
-          rsa: { keyGen: [], enc: [], dec: [] },
-          pqc: { keyGen: [], enc: [], dec: [] }
+          rsa: { keyGen: [] as number[], enc: [] as number[], dec: [] as number[] },
+          pqc: { keyGen: [] as number[], enc: [] as number[], dec: [] as number[] }
         };
+
+        // WARMUP PHASE (Unrecorded):
+        // Run crypto algorithms silently 5 times so the V8 JS engine 
+        // JIT compiler can optimize the code paths before we start timing.
+        for (let w = 0; w < 5; w++) {
+          runRSABenchmark(payload);
+          await runMLKEMBenchmark(payload);
+        }
 
         for (let i = 0; i < iterations; i++) {
           // 1. Yield to the event loop so the server can actually send the chunk
@@ -39,7 +50,7 @@ export async function POST(request) {
         }
 
         // 4. Calculate final averages
-        const avg = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
+        const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length;
         const finalData = {
           iterations,
           averages: {
@@ -71,7 +82,7 @@ export async function POST(request) {
       },
     });
 
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
