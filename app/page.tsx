@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import BenchmarkDashboard from '@/components/BenchmarkDashboard';
 import TestingInterface from '@/components/TestingInterface';
 import AnimatedLatticeBackground from '@/components/AnimatedLatticeBackground';
 
@@ -15,15 +14,17 @@ export default function Home() {
   }, [activeTab]);
 
   return (
-    <div className="relative min-h-screen bg-slate-950 overflow-hidden text-slate-200">
+    <div className="relative min-h-screen bg-slate-950 overflow-hidden text-slate-200 print:bg-white print:text-black print:overflow-visible">
       
       {/* 2D Canvas Background Layer - Fixed behind everything */}
-      <AnimatedLatticeBackground />
+      <div className="print:hidden">
+        <AnimatedLatticeBackground />
+      </div>
 
       {/* Main UI Layer */}
-      <div className="relative z-10 container mx-auto px-4 py-16 flex flex-col items-center">
+      <div className="relative z-10 container mx-auto px-4 py-16 print:p-0 flex flex-col items-center print:block print:max-w-full print:w-full print:m-0">
         
-        <header className="text-center mb-16 max-w-3xl">
+        <header className="text-center mb-16 max-w-3xl print:hidden">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-mono mb-6 backdrop-blur-md">
             <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
             NIST Standardized
@@ -37,13 +38,13 @@ export default function Home() {
         </header>
 
         {/* Floating Tab Navigation */}
-        <div className="flex justify-center mb-12 w-full">
+        <div className="flex justify-center mb-12 w-full print:hidden">
           <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-1.5 rounded-2xl shadow-2xl shadow-black/50 inline-flex relative">
-            {['overview', 'testing', 'dashboard'].map((tab) => (
+            {['overview', 'testing'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`relative px-8 py-3 rounded-xl transition-all duration-300 font-medium tracking-wide z-10 ${
+                className={`relative px-12 py-3 rounded-xl transition-all duration-300 font-medium tracking-wide z-10 ${
                   activeTab === tab
                     ? 'text-white'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
@@ -59,7 +60,7 @@ export default function Home() {
         </div>
 
         {/* Content Area */}
-        <main ref={contentRef} className="w-full max-w-5xl w-full">
+        <main ref={contentRef} className="w-full max-w-5xl print:max-w-full print:w-full print:m-0 print:p-0">
           {activeTab === 'overview' && (
             <div className="space-y-8">
               
@@ -115,21 +116,19 @@ export default function Home() {
                     </p>
                   </div>
                   <button 
-                    onClick={() => setActiveTab('dashboard')}
+                    onClick={() => setActiveTab('testing')}
                     className="w-full py-4 bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 rounded-xl font-bold transition-all duration-300 transform hover:scale-[1.02]"
                   >
-                    View Analytics
+                    Generate Reports
                   </button>
                 </div>
               </section>
             </div>
           )}
           
-          {/* Wrapped in a conditional so the glassmorphic box doesn't render empty on the Overview tab */}
-          {(activeTab === 'dashboard' || activeTab === 'testing') && (
-            <div className="bg-slate-900/40 backdrop-blur-2xl rounded-3xl border border-slate-700/50 shadow-2xl">
-              {activeTab === 'dashboard' && <BenchmarkDashboard />}
-              {activeTab === 'testing' && <TestingInterface />}
+          {activeTab === 'testing' && (
+            <div className="bg-slate-900/40 backdrop-blur-2xl rounded-3xl border border-slate-700/50 shadow-2xl print:bg-transparent print:border-none print:shadow-none print:rounded-none">
+              <TestingInterface />
             </div>
           )}
         </main>

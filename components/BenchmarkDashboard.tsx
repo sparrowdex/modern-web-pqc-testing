@@ -26,12 +26,13 @@ export default function BenchmarkDashboard() {
   const [results, setResults] = useState<BenchmarkResults | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [iterations, setIterations] = useState(50);
 
   const runDefaultBenchmark = async () => {
     setLoading(true);
     setError(null);
     try {
-      const benchmarkResults = await runBenchmark("Standard Benchmark Payload");
+      const benchmarkResults = await runBenchmark("Standard Benchmark Payload", iterations);
       setResults(benchmarkResults);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Benchmark failed');
@@ -44,10 +45,10 @@ export default function BenchmarkDashboard() {
     return parseFloat(timeStr).toFixed(2) + ' ms';
   };
 
-  const calculateSpeedup = (pqcTime: string, rsaTime: string) => {
-    const pqc = parseFloat(pqcTime);
-    const rsa = parseFloat(rsaTime);
-    return (rsa / pqc).toFixed(1) + 'x';
+  const calculateSpeedup = (slowerTime: string, fasterTime: string) => {
+    const slower = parseFloat(slowerTime);
+    const faster = parseFloat(fasterTime);
+    return (slower / faster).toFixed(1) + 'x';
   };
 
   return (
@@ -57,13 +58,26 @@ export default function BenchmarkDashboard() {
           <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
             Performance Overview
           </h2>
-          <button
-            onClick={runDefaultBenchmark}
-            disabled={loading}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300 transition-colors"
-          >
-            {loading ? 'Running...' : results ? 'Refresh Benchmark' : 'Run Benchmark'}
-          </button>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <label className="text-sm text-slate-600 dark:text-slate-400">Iterations:</label>
+              <input 
+                type="number" 
+                min="10" 
+                max="5000" 
+                value={iterations}
+                onChange={(e) => setIterations(Number(e.target.value))}
+                className="w-20 px-2 py-1 text-sm border rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+              />
+            </div>
+            <button
+              onClick={runDefaultBenchmark}
+              disabled={loading}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300 transition-colors"
+            >
+              {loading ? 'Running...' : results ? 'Refresh Benchmark' : 'Run Benchmark'}
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -101,7 +115,7 @@ export default function BenchmarkDashboard() {
                   </div>
                   <div className="flex justify-between font-bold text-green-600 dark:text-green-400">
                     <span className="text-sm">Speedup:</span>
-                    <span className="font-mono text-sm">{calculateSpeedup(results.averages.pqc.keyGen, results.averages.rsa.keyGen)}</span>
+                    <span className="font-mono text-sm">{calculateSpeedup(results.averages.rsa.keyGen, results.averages.pqc.keyGen)}</span>
                   </div>
                 </div>
               </div>
@@ -119,7 +133,7 @@ export default function BenchmarkDashboard() {
                   </div>
                   <div className="flex justify-between font-bold text-blue-600 dark:text-blue-400">
                     <span className="text-sm">RSA Faster:</span>
-                    <span className="font-mono text-sm">{calculateSpeedup(results.averages.rsa.encrypt, results.averages.pqc.encrypt)}</span>
+                    <span className="font-mono text-sm">{calculateSpeedup(results.averages.pqc.encrypt, results.averages.rsa.encrypt)}</span>
                   </div>
                 </div>
               </div>
@@ -137,26 +151,30 @@ export default function BenchmarkDashboard() {
                   </div>
                   <div className="flex justify-between font-bold text-green-600 dark:text-green-400">
                     <span className="text-sm">Speedup:</span>
-                    <span className="font-mono text-sm">{calculateSpeedup(results.averages.pqc.decrypt, results.averages.rsa.decrypt)}</span>
+                    <span className="font-mono text-sm">{calculateSpeedup(results.averages.rsa.decrypt, results.averages.pqc.decrypt)}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg">
-              <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">Ciphertext Size Comparison</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">Ciphertext Size & Network Trade-off</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{results.averages.rsa.size} B</div>
                   <div className="text-sm text-slate-600 dark:text-slate-400">RSA-2048</div>
+                  <div className="text-xs text-slate-500 mt-1 italic">Low Bandwidth</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{results.averages.pqc.size} B</div>
                   <div className="text-sm text-slate-600 dark:text-slate-400">ML-KEM-768</div>
+                  <div className="text-xs text-slate-500 mt-1 italic">+{(results.averages.pqc.size - results.averages.rsa.size)} Bytes Overhead</div>
                 </div>
               </div>
-              <div className="text-center mt-2 text-sm text-slate-500 dark:text-slate-400">
-                ML-KEM is {(results.averages.pqc.size / results.averages.rsa.size).toFixed(1)}x larger
+              <div className="bg-white dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700">
+                <p className="text-sm text-slate-600 dark:text-slate-400 text-center">
+                  While ML-KEM is computationally faster, its ciphertext is <strong>{(results.averages.pqc.size / results.averages.rsa.size).toFixed(1)}x larger</strong>. On high-latency networks (like 3G/Edge), this added payload can consume the speed benefits gained by the faster CPU execution.
+                </p>
               </div>
             </div>
 

@@ -24,3 +24,30 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/*
+  This class temporarily forces chart elements to be visible for PNG export
+  when the user is in dark mode. It ensures text and lines are dark.
+*/
+.force-export-light-mode {
+  background-color: white !important;
+}
+
+.force-export-light-mode h3,
+.force-export-light-mode p,
+.force-export-light-mode strong,
+.force-export-light-mode table,
+.force-export-light-mode th,
+.force-export-light-mode td {
+  color: black !important;
+}
+
+/* Target recharts SVG <text> elements (axes, labels, etc.) */
+.force-export-light-mode text {
+  fill: black !important;
+}
+
+/* Target recharts legend text which is not an SVG element */
+.force-export-light-mode .recharts-legend-item-text {
+  color: black !important;
+}
